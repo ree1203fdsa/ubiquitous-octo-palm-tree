@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>게임 피드백</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-input: #1a1a26;
+  --fg: #e8e6f0;
+  --fg-dim: #8884a0;
+  --fg-muted: #5c587a;
+  --accent: #7c6aef;
+  --accent-soft: rgba(124,106,239,0.12);
+  --green: #4ade80;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --border: rgba(255,255,255,0.06);
+  --radius: 12px;
+  --radius-sm: 8px;
+  color-scheme: dark;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width:900px; margin:0 auto; padding:24px 20px 80px; }
+
+/* Header */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.site-header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.user-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.user-badge.admin { background: rgba(251,191,36,0.15); color: var(--yellow); }
+.user-badge.user { background: var(--accent-soft); color: var(--accent); }
+.logout-btn {
+  padding: 6px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.logout-btn:hover { color: var(--fg); }
+
+/* Auth Page */
+.auth-page {
+  max-width: 400px;
+  margin: 80px auto;
+  text-align: center;
+}
+.auth-page h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.auth-page p { color: var(--fg-dim); font-size: 14px; margin-bottom: 32px; }
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: left;
+}
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: none;
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-tab.active { background: var(--accent); color: #fff; }
+
+/* Form elements */
+.form-row { margin-bottom: 16px; }
+.form-row label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-dim);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form-row input, .form-row textarea, .form-row select {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.form-row textarea { resize: vertical; min-height: 80px; }
+.form-row select option { background: var(--bg-input); }
+
+.btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), #9b7aff); color: #fff; }
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--fg-dim); }
+.btn-outline:hover { color: var(--fg); border-color: var(--fg-muted); }
+.btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.btn-sm { width: auto; padding: 7px 16px; font-size: 13px; }
+
+.error-msg { color: var(--red); font-size: 13px; margin-top: 8px; min-height: 20px; }
+.hint { color: var(--fg-muted); font-size: 12px; margin-top: 4px; }
+
+/* Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 4px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border);
+}
+.nav-tab {
+  flex: 1;
+  padding: 11px 16px;
+  border: none;
+  background: none;
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-tab.active { background: var(--accent); color: #fff; }
+.nav-tab:hover:not(.active) { color: var(--fg); background: var(--bg-input); }
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+/* Game list */
+.game-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.game-item:hover { border-color: var(--accent); }
+.game-name { font-weight: 600; font-size: 16px; }
+.game-desc { font-size: 13px; color: var(--fg-dim); margin-top: 2px; }
+.game-actions { display: flex; gap: 8px; }
+
+/* Feedback card */
+.feedback-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.feedback-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.feedback-author { font-weight: 600; font-size: 15px; }
+.feedback-date { font-size: 12px; color: var(--fg-muted); }
+.feedback-score-big {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+.feedback-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+  margin-bottom: 14px;
+}
+@media (max-width: 500px) { .feedback-bars { grid-template-columns: 1fr; } }
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bar-label { font-size: 12px; color: var(--fg-dim); min-width: 70px; }
+.bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 28px;
+  text-align: right;
+}
+.feedback-comment {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--fg-dim);
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.feedback-game-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--accent-soft);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+/* Slider */
+.score-slider { margin-bottom: 16px; }
+.score-slider label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  margin-bottom: 6px;
+}
+.score-slider .val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--fg-muted);
+  font-size: 14px;
+}
+
+.select-game-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.select-game-btn:hover { border-color: var(--accent); }
+.select-game-btn .sg-name { font-weight: 600; }
+.select-game-btn .sg-desc { font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH PAGE -->
+<div id="auth-page" class="auth-page">
+  <h1>GAME FEEDBACK</h1>
+  <p>게임 개발자를 위한 피드백 서비스</p>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuth('login')">로그인</button>
+      <button class="auth-tab" onclick="switchAuth('register')">회원가입</button>
+    </div>
+    <form id="login-form" onsubmit="return handleLogin(event)">
+      <div class="form-row">
+        <label>이메일</label>
+        <input type="email" id="login-email" required placeholder="email@example.com">
+      </div>
+      <div class="form-row">
+        <label>비밀번호</label>
+        <input type="password" id="login-pw" required placeholder="비밀번호">
+      </div>
+      <div class="error-msg" id="login-error"></div>
+      <button type="submit" class="btn btn-primary" id="login-btn">로그인</button>
+    </form>
+    <form id="register-form" style="display:none" onsubmit="return handleRegister(event)">
+      <div class="form-row">
+        <label>닉네임</label>
+        <input type="text" id="reg-nick" required placeholder="닉네임">
+      </div>
+      <div class="form-row">
+        <label>이메일</label>
+        <input type="email" id="reg-email" required placeholder="email@example.com">
+      </div>
+      <div class="form-row">
+        <label>비밀번호</label>
+        <input type="password" id="reg-pw" required placeholder="4자 이상">
+      </div>
+      <div class="error-msg" id="reg-error"></div>
+      <button type="submit" class="btn btn-primary" id="reg-btn">회원가입</button>
+      <p class="hint" style="margin-top:12px;text-align:center">첫 번째 가입자는 자동으로 관리자가 됩니다</p>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" style="display:none">
+  <div class="container">
+    <div class="site-header">
+      <h1>GAME FEEDBACK</h1>
+      <div class="user-info">
+        <span id="user-nick"></span>
+        <span class="user-badge" id="user-role-badge"></span>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+
+    <!-- ADMIN TABS -->
+    <div id="admin-nav" class="nav-tabs" style="display:none">
+      <button class="nav-tab active" onclick="switchSection('manage-games')">게임 관리</button>
+      <button class="nav-tab" onclick="switchSection('all-feedback')">전체 피드백</button>
+    </div>
+
+    <!-- USER TABS -->
+    <div id="user-nav" class="nav-tabs" style="display:none">
+      <button class="nav-tab active" onclick="switchSection('write-feedback')">피드백 작성</button>
+      <button class="nav-tab" onclick="switchSection('my-feedback')">내 피드백</button>
+    </div>
+
+    <!-- ADMIN: Manage Games -->
+    <div id="sec-manage-games" class="section">
+      <div class="card" style="margin-bottom:24px">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">새 게임 등록</h3>
+        <form onsubmit="return addGame(event)">
+          <div class="form-row">
+            <label>게임 / 사이트 이름 *</label>
+            <input type="text" id="new-game-name" required placeholder="게임 이름을 입력하세요">
+          </div>
+          <div class="form-row">
+            <label>설명</label>
+            <textarea id="new-game-desc" rows="2" placeholder="간단한 설명 (선택)"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" id="add-game-btn">게임 등록</button>
+        </form>
+      </div>
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px">등록된 게임</h3>
+      <div id="game-list"></div>
+    </div>
+
+    <!-- ADMIN: All Feedback -->
+    <div id="sec-all-feedback" class="section">
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">전체 피드백</h3>
+      <div id="all-feedback-list"></div>
+    </div>
+
+    <!-- USER: Write Feedback -->
+    <div id="sec-write-feedback" class="section">
+      <div id="game-select-view">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">피드백할 게임을 선택하세요</h3>
+        <div id="user-game-list"></div>
+      </div>
+      <div id="feedback-form-view" style="display:none">
+        <button class="btn btn-outline btn-sm" onclick="backToGameSelect()" style="margin-bottom:16px">← 게임 선택으로</button>
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:4px" id="selected-game-name"></h3>
+          <p style="font-size:13px;color:var(--fg-dim);margin-bottom:20px" id="selected-game-desc"></p>
+          <form onsubmit="return submitFeedback(event)">
+            <div class="score-slider">
+              <label>게임플레이 <span class="val" id="v-gameplay">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-gameplay').textContent=this.value" data-key="gameplay">
+            </div>
+            <div class="score-slider">
+              <label>그래픽 <span class="val" id="v-graphics">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-graphics').textContent=this.value" data-key="graphics">
+            </div>
+            <div class="score-slider">
+              <label>사운드 <span class="val" id="v-sound">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-sound').textContent=this.value" data-key="sound">
+            </div>
+            <div class="score-slider">
+              <label>스토리 <span class="val" id="v-story">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-story').textContent=this.value" data-key="story">
+            </div>
+            <div class="score-slider">
+              <label>UI/UX <span class="val" id="v-uiux">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-uiux').textContent=this.value" data-key="uiux">
+            </div>
+            <div class="score-slider">
+              <label>리플레이성 <span class="val" id="v-replayability">50</span></label>
+              <input type="range" min="0" max="100" value="50" oninput="document.getElementById('v-replayability').textContent=this.value" data-key="replayability">
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <label>피드백 내용 *</label>
+              <textarea id="feedback-comment" required rows="4" placeholder="게임에 대한 솔직한 피드백을 작성해주세요"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit-fb-btn">피드백 제출</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER: My Feedback -->
+    <div id="sec-my-feedback" class="section">
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">내가 작성한 피드백</h3>
+      <div id="my-feedback-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let currentUser = null;
+let games = [];
+let selectedGameId = null;
+
+// ---- Auth ----
+function switchAuth(mode) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  if (mode === 'login') {
+    document.querySelectorAll('.auth-tab')[0].classList.add('active');
+    document.getElementById('login-form').style.display = '';
+    document.getElementById('register-form').style.display = 'none';
+  } else {
+    document.querySelectorAll('.auth-tab')[1].classList.add('active');
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = '';
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  btn.disabled = true; err.textContent = '';
+  try {
+    const res = await fetch(API + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        email: document.getElementById('login-email').value,
+        password: document.getElementById('login-pw').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.error; return; }
+    try { localStorage.setItem('token', data.token); } catch {}
+    currentUser = data;
+    enterApp();
+  } catch { err.textContent = '서버에 연결할 수 없습니다.'; }
+  finally { btn.disabled = false; }
+  return false;
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const btn = document.getElementById('reg-btn');
+  const err = document.getElementById('reg-error');
+  btn.disabled = true; err.textContent = '';
+  try {
+    const res = await fetch(API + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'register',
+        nickname: document.getElementById('reg-nick').value,
+        email: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-pw').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.error; return; }
+    try { localStorage.setItem('token', data.token); } catch {}
+    currentUser = data;
+    enterApp();
+  } catch { err.textContent = '서버에 연결할 수 없습니다.'; }
+  finally { btn.disabled = false; }
+  return false;
+}
+
+async function logout() {
+  let token = '';
+  try { token = localStorage.getItem('token') || ''; } catch {}
+  try {
+    await fetch(API + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ action: 'logout' })
+    });
+  } catch {}
+  try { localStorage.removeItem('token'); } catch {}
+  currentUser = null;
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('auth-page').style.display = '';
+}
+
+async function tryAutoLogin() {
+  let token = '';
+  try { token = localStorage.getItem('token') || ''; } catch {}
+  if (!token) return;
+  try {
+    const res = await fetch(API + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ action: 'me' })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    currentUser = { ...data, token };
+    enterApp();
+  } catch {}
+}
+
+function getToken() {
+  if (currentUser && currentUser.token) return currentUser.token;
+  try { return localStorage.getItem('token') || ''; } catch { return ''; }
+}
+
+// ---- App ----
+function enterApp() {
+  document.getElementById('auth-page').style.display = 'none';
+  document.getElementById('main-app').style.display = '';
+  document.getElementById('user-nick').textContent = currentUser.nickname;
+  const badge = document.getElementById('user-role-badge');
+  badge.textContent = currentUser.role === 'admin' ? '관리자' : '유저';
+  badge.className = 'user-badge ' + currentUser.role;
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('admin-nav').style.display = '';
+    document.getElementById('user-nav').style.display = 'none';
+    switchSection('manage-games');
+  } else {
+    document.getElementById('admin-nav').style.display = 'none';
+    document.getElementById('user-nav').style.display = '';
+    switchSection('write-feedback');
+  }
+}
+
+function switchSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+
+  const navs = document.querySelectorAll((currentUser.role === 'admin' ? '#admin-nav' : '#user-nav') + ' .nav-tab');
+  navs.forEach(t => {
+    if (t.textContent.includes(sectionLabel(id))) t.classList.add('active');
+  });
+
+  if (id === 'manage-games') loadGames();
+  if (id === 'all-feedback') loadAllFeedback();
+  if (id === 'write-feedback') loadUserGames();
+  if (id === 'my-feedback') loadMyFeedback();
+}
+
+function sectionLabel(id) {
+  const map = { 'manage-games': '게임 관리', 'all-feedback': '전체 피드백', 'write-feedback': '피드백 작성', 'my-feedback': '내 피드백' };
+  return map[id] || '';
+}
+
+// ---- Games ----
+async function loadGames() {
+  const el = document.getElementById('game-list');
+  el.innerHTML = '<div class="empty-state">불러오는 중...</div>';
+  try {
+    const res = await fetch(API + '/api/games');
+    games = await res.json();
+    if (!games.length) { el.innerHTML = '<div class="empty-state">등록된 게임이 없습니다.</div>'; return; }
+    el.innerHTML = games.map(g => `
+      <div class="game-item">
+        <div>
+          <div class="game-name">${esc(g.name)}</div>
+          ${g.description ? `<div class="game-desc">${esc(g.description)}</div>` : ''}
+        </div>
+        <div class="game-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteGame('${g.id}')">삭제</button>
+        </div>
+      </div>
+    `).join('');
+  } catch { el.innerHTML = '<div class="empty-state">불러오기 실패</div>'; }
+}
+
+async function addGame(e) {
+  e.preventDefault();
+  const btn = document.getElementById('add-game-btn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + '/api/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      body: JSON.stringify({
+        name: document.getElementById('new-game-name').value.trim(),
+        description: document.getElementById('new-game-desc').value.trim()
+      })
+    });
+    if (!res.ok) { const d = await res.json(); alert(d.error); return; }
+    document.getElementById('new-game-name').value = '';
+    document.getElementById('new-game-desc').value = '';
+    loadGames();
+  } catch { alert('게임 등록 실패'); }
+  finally { btn.disabled = false; }
+  return false;
+}
+
+async function deleteGame(id) {
+  if (!confirm('이 게임을 삭제하시겠습니까?')) return;
+  try {
+    await fetch(API + '/api/games', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      body: JSON.stringify({ id })
+    });
+    loadGames();
+  } catch {}
+}
+
+// ---- Feedback (User) ----
+async function loadUserGames() {
+  const el = document.getElementById('user-game-list');
+  el.innerHTML = '<div class="empty-state">불러오는 중...</div>';
+  document.getElementById('game-select-view').style.display = '';
+  document.getElementById('feedback-form-view').style.display = 'none';
+  try {
+    const res = await fetch(API + '/api/games');
+    games = await res.json();
+    if (!games.length) { el.innerHTML = '<div class="empty-state">등록된 게임이 없습니다.<br>관리자가 게임을 등록할 때까지 기다려주세요.</div>'; return; }
+    el.innerHTML = games.map(g => `
+      <button class="select-game-btn" onclick="selectGame('${g.id}')">
+        <div class="sg-name">${esc(g.name)}</div>
+        ${g.description ? `<div class="sg-desc">${esc(g.description)}</div>` : ''}
+      </button>
+    `).join('');
+  } catch { el.innerHTML = '<div class="empty-state">불러오기 실패</div>'; }
+}
+
+function selectGame(id) {
+  selectedGameId = id;
+  const game = games.find(g => g.id === id);
+  if (!game) return;
+  document.getElementById('selected-game-name').textContent = game.name;
+  document.getElementById('selected-game-desc').textContent = game.description || '';
+  document.getElementById('game-select-view').style.display = 'none';
+  document.getElementById('feedback-form-view').style.display = '';
+  // reset sliders
+  document.querySelectorAll('input[type=range]').forEach(s => { s.value = 50; });
+  document.querySelectorAll('.score-slider .val').forEach(v => { v.textContent = '50'; });
+  document.getElementById('feedback-comment').value = '';
+}
+
+function backToGameSelect() {
+  document.getElementById('game-select-view').style.display = '';
+  document.getElementById('feedback-form-view').style.display = 'none';
+}
+
+async function submitFeedback(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-fb-btn');
+  btn.disabled = true;
+  const scores = {};
+  document.querySelectorAll('input[type=range]').forEach(s => {
+    scores[s.dataset.key] = Number(s.value);
+  });
+  try {
+    const res = await fetch(API + '/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      body: JSON.stringify({
+        gameId: selectedGameId,
+        ...scores,
+        comment: document.getElementById('feedback-comment').value.trim()
+      })
+    });
+    if (!res.ok) { const d = await res.json(); alert(d.error); return; }
+    alert('피드백이 제출되었습니다!');
+    backToGameSelect();
+  } catch { alert('피드백 제출 실패'); }
+  finally { btn.disabled = false; }
+  return false;
+}
+
+// ---- Feedback lists ----
+function scoreColor(s) {
+  if (s >= 80) return 'var(--green)';
+  if (s >= 60) return 'var(--accent)';
+  if (s >= 40) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function renderFeedbackCard(fb, showGame, canDelete) {
+  const labels = { gameplay:'게임플레이', graphics:'그래픽', sound:'사운드', story:'스토리', uiux:'UI/UX', replayability:'리플레이성' };
+  const scores = fb.scores || {};
+  const gameName = showGame ? (games.find(g => g.id === fb.gameId) || {}).name || fb.gameId : '';
+  const date = new Date(fb.createdAt).toLocaleDateString('ko-KR', { year:'numeric', month:'short', day:'numeric' });
+
+  let bars = Object.entries(labels).map(([k, l]) => {
+    const v = scores[k] || 0;
+    return `<div class="bar-row">
+      <span class="bar-label">${l}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
+      <span class="bar-val" style="color:${scoreColor(v)}">${v}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="feedback-card">
+      ${showGame ? `<span class="feedback-game-tag">${esc(gameName)}</span>` : ''}
+      <div class="feedback-top">
+        <div>
+          <div class="feedback-author">${esc(fb.author || '익명')}</div>
+          <div class="feedback-date">${date}</div>
+        </div>
+        <div class="feedback-score-big" style="color:${scoreColor(fb.overall)}">${fb.overall}</div>
+      </div>
+      <div class="feedback-bars">${bars}</div>
+      <div class="feedback-comment">${esc(fb.comment || '')}</div>
+      ${canDelete ? `<button class="btn btn-danger btn-sm" style="margin-top:12px" onclick="deleteFeedback('${fb.id}')">삭제</button>` : ''}
+    </div>
+  `;
+}
+
+async function loadAllFeedback() {
+  const el = document.getElementById('all-feedback-list');
+  el.innerHTML = '<div class="empty-state">불러오는 중...</div>';
+  try {
+    if (!games.length) {
+      const r = await fetch(API + '/api/games');
+      games = await r.json();
+    }
+    const res = await fetch(API + '/api/feedback');
+    const list = await res.json();
+    if (!list.length) { el.innerHTML = '<div class="empty-state">아직 피드백이 없습니다.</div>'; return; }
+    el.innerHTML = list.map(fb => renderFeedbackCard(fb, true, true)).join('');
+  } catch { el.innerHTML = '<div class="empty-state">불러오기 실패</div>'; }
+}
+
+async function loadMyFeedback() {
+  const el = document.getElementById('my-feedback-list');
+  el.innerHTML = '<div class="empty-state">불러오는 중...</div>';
+  try {
+    if (!games.length) {
+      const r = await fetch(API + '/api/games');
+      games = await r.json();
+    }
+    const res = await fetch(API + '/api/feedback');
+    const all = await res.json();
+    const mine = all.filter(f => f.authorEmail === currentUser.email);
+    if (!mine.length) { el.innerHTML = '<div class="empty-state">아직 작성한 피드백이 없습니다.</div>'; return; }
+    el.innerHTML = mine.map(fb => renderFeedbackCard(fb, true, false)).join('');
+  } catch { el.innerHTML = '<div class="empty-state">불러오기 실패</div>'; }
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('이 피드백을 삭제하시겠습니까?')) return;
+  try {
+    await fetch(API + '/api/feedback', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      body: JSON.stringify({ id })
+    });
+    loadAllFeedback();
+  } catch {}
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Auto-login on load
+tryAutoLogin();
+</script>
+</body>
+</html>
