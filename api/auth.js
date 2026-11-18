@@ -36,18 +36,19 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
-  const { action, email, password, nickname } = req.body || {};
+  const { action, username, password, nickname } = req.body || {};
 
   if (action === "register") {
-    if (!email || !password || !nickname)
-      return res.status(400).json({ error: "이메일, 비밀번호, 닉네임을 모두 입력하세요." });
+    if (!username || !password || !nickname)
+      return res.status(400).json({ error: "아이디, 비밀번호, 닉네임을 모두 입력하세요." });
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username))
+      return res.status(400).json({ error: "아이디는 영문, 숫자, _만 가능하며 3~20자여야 합니다." });
     if (password.length < 4)
       return res.status(400).json({ error: "비밀번호는 4자 이상이어야 합니다." });
 
-    const safeKey = email.replace(/\./g, ",");
-    const existing = await fbGet(`users/${safeKey}`);
+    const existing = await fbGet(`users/${username}`);
     if (existing)
-      return res.status(409).json({ error: "이미 등록된 이메일입니다." });
+      return res.status(409).json({ error: "이미 사용 중인 아이디입니다." });
 
     const salt = crypto.randomBytes(16).toString("hex");
     const hash = hashPassword(password, salt);
@@ -57,7 +58,7 @@ module.exports = async function handler(req, res) {
     const isFirstUser = !allUsers || Object.keys(allUsers).length === 0;
 
     const user = {
-      email,
+      username,
       nickname,
       salt,
       hash,
@@ -65,9 +66,9 @@ module.exports = async function handler(req, res) {
       createdAt: new Date().toISOString(),
     };
 
-    await fbSet(`users/${safeKey}`, user);
+    await fbSet(`users/${username}`, user);
     await fbSet(`sessions/${token}`, {
-      email,
+      username,
       role: user.role,
       nickname,
       createdAt: new Date().toISOString(),
@@ -75,28 +76,27 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       token,
-      email,
+      username,
       nickname,
       role: user.role,
     });
   }
 
   if (action === "login") {
-    if (!email || !password)
-      return res.status(400).json({ error: "이메일과 비밀번호를 입력하세요." });
+    if (!username || !password)
+      return res.status(400).json({ error: "아이디와 비밀번호를 입력하세요." });
 
-    const safeKey = email.replace(/\./g, ",");
-    const user = await fbGet(`users/${safeKey}`);
+    const user = await fbGet(`users/${username}`);
     if (!user)
-      return res.status(401).json({ error: "이메일 또는 비밀번호가 틀렸습니다." });
+      return res.status(401).json({ error: "아이디 또는 비밀번호가 틀렸습니다." });
 
     const hash = hashPassword(password, user.salt);
     if (hash !== user.hash)
-      return res.status(401).json({ error: "이메일 또는 비밀번호가 틀렸습니다." });
+      return res.status(401).json({ error: "아이디 또는 비밀번호가 틀렸습니다." });
 
     const token = generateToken();
     await fbSet(`sessions/${token}`, {
-      email,
+      username,
       role: user.role,
       nickname: user.nickname,
       createdAt: new Date().toISOString(),
@@ -104,7 +104,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       token,
-      email,
+      username,
       nickname: user.nickname,
       role: user.role,
     });
@@ -118,7 +118,7 @@ module.exports = async function handler(req, res) {
     if (!session) return res.status(401).json({ error: "세션이 만료되었습니다." });
 
     return res.status(200).json({
-      email: session.email,
+      username: session.username,
       nickname: session.nickname,
       role: session.role,
     });

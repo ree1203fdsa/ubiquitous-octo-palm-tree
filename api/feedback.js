@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
       overall,
       comment,
       author: session.nickname,
-      authorEmail: session.email,
+      authorUsername: session.username,
       createdAt: new Date().toISOString(),
     };
 
