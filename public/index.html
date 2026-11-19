@@ -125,17 +125,6 @@ h2 { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
 .game-btn .name { font-weight: 600; font-size: 16px; }
 .game-btn .desc { font-size: 13px; color: var(--fg-dim); margin-top: 2px; }
 
-.slider { margin-bottom: 14px; }
-.slider label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--fg-dim);
-  margin-bottom: 4px;
-}
-.slider .val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--fg); }
-input[type="range"] { width: 100%; accent-color: var(--accent); }
-
 .tabs {
   display: flex;
   gap: 4px;
@@ -192,14 +181,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 }
 .fb-name { font-weight: 600; }
 .fb-date { font-size: 12px; color: var(--fg-muted); }
-.fb-score { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; }
-.fb-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin-bottom: 12px; }
-@media (max-width: 520px) { .fb-bars { grid-template-columns: 1fr; } }
-.bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-.bar-label { color: var(--fg-dim); min-width: 64px; }
-.bar-track { flex: 1; height: 5px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 3px; }
-.bar-val { font-family: 'Space Grotesk', sans-serif; font-weight: 600; min-width: 26px; text-align: right; }
 .fb-comment {
   font-size: 14px;
   color: var(--fg-dim);
@@ -248,7 +229,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
           <label for="fb-name">이름</label>
           <input type="text" id="fb-name" maxlength="30" required placeholder="이름을 입력하세요">
         </div>
-        <div id="sliders"></div>
         <div class="form-row">
           <label for="fb-comment">피드백 내용</label>
           <textarea id="fb-comment" maxlength="2000" required placeholder="게임에 대한 솔직한 의견을 적어주세요"></textarea>
@@ -311,10 +291,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 </div>
 
 <script>
-const CATEGORIES = [
-  ['gameplay', '게임플레이'], ['graphics', '그래픽'], ['sound', '사운드'],
-  ['story', '스토리'], ['uiux', 'UI/UX'], ['replayability', '리플레이성'],
-];
 let games = [];
 let selectedGame = null;
 let adminPw = '';
@@ -323,18 +299,10 @@ try { adminPw = sessionStorage.getItem('adminPw') || ''; } catch {}
 
 const $ = id => document.getElementById(id);
 function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
-function color(s) { return s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--accent)' : s >= 40 ? 'var(--yellow)' : 'var(--red)'; }
 function show(id) {
   ['view-games', 'view-form', 'view-admin-login', 'view-admin'].forEach(v => $(v).hidden = v !== id);
   $('admin-toggle').textContent = id.startsWith('view-admin') ? '피드백 쓰기' : '관리자';
 }
-
-$('sliders').innerHTML = CATEGORIES.map(([k, l]) => `
-  <div class="slider">
-    <label for="s-${k}">${l} <span class="val" id="v-${k}">50</span></label>
-    <input type="range" id="s-${k}" min="0" max="100" value="50" data-key="${k}"
-      oninput="$('v-${k}').textContent=this.value">
-  </div>`).join('');
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -372,7 +340,6 @@ function openForm(id) {
   $('form-game-desc').textContent = selectedGame.description || '';
   $('fb-comment').value = '';
   $('fb-msg').textContent = '';
-  CATEGORIES.forEach(([k]) => { $('s-' + k).value = 50; $('v-' + k).textContent = '50'; });
   show('view-form');
   $('fb-name').focus();
 }
@@ -382,7 +349,6 @@ $('fb-form').addEventListener('submit', async e => {
   const btn = $('fb-submit'), msg = $('fb-msg');
   btn.disabled = true; msg.className = 'msg'; msg.textContent = '';
   const body = { gameId: selectedGame.id, name: $('fb-name').value.trim(), comment: $('fb-comment').value.trim() };
-  CATEGORIES.forEach(([k]) => body[k] = Number($('s-' + k).value));
   try {
     await api('/api/feedback', { method: 'POST', body: JSON.stringify(body) });
     msg.className = 'msg ok';
@@ -506,12 +472,6 @@ function renderFeedback() {
   el.innerHTML = list.map(fb => {
     const gameName = (games.find(g => g.id === fb.gameId) || {}).name || '삭제된 게임';
     const date = new Date(fb.createdAt).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' });
-    const bars = CATEGORIES.map(([k, l]) => {
-      const v = fb.scores?.[k] ?? 0;
-      return `<div class="bar-row"><span class="bar-label">${l}</span>
-        <div class="bar-track"><div class="bar-fill" style="width:${v}%;background:${color(v)}"></div></div>
-        <span class="bar-val" style="color:${color(v)}">${v}</span></div>`;
-    }).join('');
     return `<div class="fb-card">
       <div class="fb-top">
         <div>
@@ -519,9 +479,7 @@ function renderFeedback() {
           <div class="fb-name">${esc(fb.name || '익명')}</div>
           <div class="fb-date">${date}</div>
         </div>
-        <div class="fb-score" style="color:${color(fb.overall)}">${fb.overall}</div>
       </div>
-      <div class="fb-bars">${bars}</div>
       <div class="fb-comment">${esc(fb.comment)}</div>
       <button class="btn btn-danger" style="margin-top:12px" onclick="deleteFeedback('${fb.id}')">삭제</button>
     </div>`;

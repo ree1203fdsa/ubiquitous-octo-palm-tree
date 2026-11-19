@@ -1,13 +1,5 @@
 const { isAdmin, cors, fbGet, fbPush, fbDelete, toList } = require("./_admin");
 
-const KEYS = ["gameplay", "graphics", "sound", "story", "uiux", "replayability"];
-
-function clamp(v) {
-  const n = Number(v);
-  if (isNaN(n)) return 50;
-  return Math.max(0, Math.min(100, Math.round(n)));
-}
-
 module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -25,15 +17,9 @@ module.exports = async function handler(req, res) {
       const game = await fbGet(`games/${gameId}`);
       if (!game) return res.status(404).json({ error: "존재하지 않는 게임입니다." });
 
-      const scores = {};
-      for (const k of KEYS) scores[k] = clamp(b[k]);
-      const overall = Math.round(KEYS.reduce((s, k) => s + scores[k], 0) / KEYS.length);
-
       const feedback = {
         gameId,
         name,
-        scores,
-        overall,
         comment,
         createdAt: new Date().toISOString(),
       };
