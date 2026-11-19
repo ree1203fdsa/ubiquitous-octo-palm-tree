@@ -1,22 +1,12 @@
 {
   "rules": {
-    "users": {
-      ".read": true,
-      ".write": true
-    },
-    "sessions": {
-      ".read": true,
-      ".write": true
-    },
     "games": {
       ".read": true,
-      ".write": true,
-      ".indexOn": ["createdAt"]
+      ".write": true
     },
     "feedbacks": {
       ".read": true,
-      ".write": true,
-      ".indexOn": ["createdAt", "gameId"]
+      ".write": true
     }
   }
 }
