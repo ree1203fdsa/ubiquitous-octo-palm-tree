@@ -4,9 +4,9 @@ const FIREBASE_DB_URL =
   "https://gaim-vlem-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // Used only when ADMIN_PASSWORD is not set; the repo is public, so only a salted scrypt hash is stored.
-const FALLBACK_SALT = "8225ac8d7ca40556e26aab120bffff3c";
+const FALLBACK_SALT = "f1e877daad45138ea4b0db1081402936";
 const FALLBACK_HASH = Buffer.from(
-  "b7be28d2938a7955b9e661b14a54db5cb9bb4dec5d2df168b2534840043854fb",
+  "adbc7ba70246b0fc19b3e24123e3404afaee49c11fbc2fff79263f98929cb6a8",
   "hex"
 );
 
