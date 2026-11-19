@@ -246,7 +246,7 @@ h2 { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
       <form id="admin-login-form">
         <div class="form-row">
           <label for="admin-pw">관리자 비밀번호</label>
-          <input type="password" id="admin-pw" required>
+          <input type="password" id="admin-pw" required autocomplete="off" data-lpignore="true" data-1p-ignore>
         </div>
         <button type="submit" class="btn btn-primary">확인</button>
         <div class="msg error" id="admin-login-msg"></div>
@@ -295,7 +295,6 @@ let games = [];
 let selectedGame = null;
 let adminPw = '';
 let allFeedback = [];
-try { adminPw = sessionStorage.getItem('adminPw') || ''; } catch {}
 
 const $ = id => document.getElementById(id);
 function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
@@ -373,7 +372,6 @@ $('admin-login-form').addEventListener('submit', async e => {
   adminPw = $('admin-pw').value;
   try {
     await api('/api/feedback');
-    try { sessionStorage.setItem('adminPw', adminPw); } catch {}
     $('admin-pw').value = '';
     $('admin-login-msg').textContent = '';
     openAdmin();
@@ -386,7 +384,6 @@ $('admin-login-form').addEventListener('submit', async e => {
 function adminFailed(err) {
   if (err.status === 401) {
     adminPw = '';
-    try { sessionStorage.removeItem('adminPw'); } catch {}
     show('view-admin-login');
     $('admin-login-msg').textContent = '다시 로그인하세요.';
     return true;
