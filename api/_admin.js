@@ -3,11 +3,22 @@ const crypto = require("crypto");
 const FIREBASE_DB_URL =
   "https://gaim-vlem-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-function isAdmin(req) {
-  const expected = process.env.ADMIN_PASSWORD || "";
-  const given = String(req.headers["x-admin-password"] || "");
-  if (!expected || given.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+function requireAdmin(req, res) {
+  const expected = Buffer.from((process.env.ADMIN_PASSWORD || "").trim());
+  if (!expected.length) {
+    res.status(500).json({
+      error: "서버에 관리자 비밀번호(ADMIN_PASSWORD)가 설정되지 않았습니다. Vercel 환경변수를 넣고 다시 배포하세요.",
+    });
+    return false;
+  }
+  let raw = String(req.headers["x-admin-password"] || "");
+  try { raw = decodeURIComponent(raw); } catch {}
+  const given = Buffer.from(raw.trim());
+  if (given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) {
+    res.status(401).json({ error: "관리자 비밀번호가 틀렸습니다." });
+    return false;
+  }
+  return true;
 }
 
 function cors(res) {
@@ -44,4 +55,4 @@ function toList(data) {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
-module.exports = { isAdmin, cors, fbGet, fbPush, fbDelete, toList };
+module.exports = { requireAdmin, cors, fbGet, fbPush, fbDelete, toList };

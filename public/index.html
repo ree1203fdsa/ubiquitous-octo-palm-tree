@@ -306,7 +306,7 @@ function show(id) {
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (adminPw) headers['X-Admin-Password'] = adminPw;
+  if (adminPw) headers['X-Admin-Password'] = encodeURIComponent(adminPw.trim());
   const res = await fetch(path, { ...opts, headers });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) { const e = new Error(data.error || '요청 실패'); e.status = res.status; throw e; }

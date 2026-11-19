@@ -1,4 +1,4 @@
-const { isAdmin, cors, fbGet, fbPush, fbDelete, toList } = require("./_admin");
+const { requireAdmin, cors, fbGet, fbPush, fbDelete, toList } = require("./_admin");
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -9,8 +9,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(toList(await fbGet("games")));
     }
 
-    if (!isAdmin(req))
-      return res.status(401).json({ error: "관리자 비밀번호가 틀렸습니다." });
+    if (!requireAdmin(req, res)) return;
 
     if (req.method === "POST") {
       const name = String(req.body?.name || "").trim();
