@@ -3,18 +3,30 @@ const crypto = require("crypto");
 const FIREBASE_DB_URL =
   "https://gaim-vlem-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-function requireAdmin(req, res) {
-  const expected = Buffer.from((process.env.ADMIN_PASSWORD || "").trim());
-  if (!expected.length) {
-    res.status(500).json({
-      error: "서버에 관리자 비밀번호(ADMIN_PASSWORD)가 설정되지 않았습니다. Vercel 환경변수를 넣고 다시 배포하세요.",
-    });
-    return false;
+// Used only when ADMIN_PASSWORD is not set; the repo is public, so only a salted scrypt hash is stored.
+const FALLBACK_SALT = "8225ac8d7ca40556e26aab120bffff3c";
+const FALLBACK_HASH = Buffer.from(
+  "b7be28d2938a7955b9e661b14a54db5cb9bb4dec5d2df168b2534840043854fb",
+  "hex"
+);
+
+function passwordMatches(given) {
+  const envPw = (process.env.ADMIN_PASSWORD || "").trim();
+  if (envPw) {
+    const a = Buffer.from(given), b = Buffer.from(envPw);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
   }
+  if (!given) return false;
+  const h = crypto.scryptSync(given, FALLBACK_SALT, 32, {
+    N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024,
+  });
+  return crypto.timingSafeEqual(h, FALLBACK_HASH);
+}
+
+function requireAdmin(req, res) {
   let raw = String(req.headers["x-admin-password"] || "");
   try { raw = decodeURIComponent(raw); } catch {}
-  const given = Buffer.from(raw.trim());
-  if (given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) {
+  if (!passwordMatches(raw.trim())) {
     res.status(401).json({ error: "관리자 비밀번호가 틀렸습니다." });
     return false;
   }
